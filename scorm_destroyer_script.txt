@@ -261,6 +261,3 @@ function getAPI()
    }
    return theAPI
 }
-function finishVideo(){
-   
-}
