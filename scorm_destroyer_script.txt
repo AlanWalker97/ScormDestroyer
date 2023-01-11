@@ -10,12 +10,21 @@
 (function() {
     'use strict';
     window.destroyScormPlayer = function () {
+        var iframe = document.getElementById("IcerikFrame");
+        var duration = iframe.contentWindow.document.getElementsByClassName("ap-label ap-tool-duration")[0].textContent.split(':');
         doSetValue("cmi.success_status","passed");
         doSetValue("cmi.completion_status","completed");
         doSetValue("cmi.exit","normal");
-        doSetValue("cmi.session_time","PT0H7M41S");
+        var sessionTime = "";
+        if(duration.length === 2){
+            sessionTime = "PT0H" + parseInt(duration[0]).toString() + "M" + parseInt(duration[1]).toString() + "S";
+        }
+        else if(duration.length === 3){
+            sessionTime = "PT"+ parseInt(duration[0]).toString() +"H" + parseInt(duration[1]).toString() + "M" + parseInt(duration[2]).toString() + "S";
+        }
+        doSetValue("cmi.session_time",sessionTime);
         doCommit();
-	return "İşlem Tamamlandı :)";
+        return "İşlem Tamamlandı :)";
     }
 })();
 
