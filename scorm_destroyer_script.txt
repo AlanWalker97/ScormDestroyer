@@ -1,0 +1,266 @@
+// ==UserScript==
+// @name         ScormDestroyer
+// @version      0.1
+// @description  Zorunlu Eğitime Hayır!
+// @author       You
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+    window.destroyScormPlayer = function () {
+        doSetValue("cmi.success_status","passed");
+        doSetValue("cmi.completion_status","completed");
+        doSetValue("cmi.exit","normal");
+        doSetValue("cmi.session_time","PT0H7M41S");
+        doCommit();
+	return "İşlem Tamamlandı :)";
+    }
+})();
+
+var _SuppressError = false;
+var _Debug = false;
+var _NoError = 0;
+var _GeneralException = 101;
+var _GeneralInitializationFailure = 102;
+var _AlreadyInitialized = 103;
+var _ContentInstanceTerminated = 104;
+var _GeneralTerminationFailure = 111;
+var _TerminationBeforeInitialization = 112;
+var _TerminationAfterTermination = 113;
+var _ReceivedDataBeforeInitialization = 122;
+var _ReceivedDataAfterTermination = 123;
+var _StoreDataBeforeInitialization = 132;
+var _StoreDataAfterTermination = 133;
+var _CommitBeforeInitialization = 142;
+var _CommitAfterTermination = 143;
+var _GeneralArgumentError = 201;
+var _GeneralGetFailure = 301;
+var _GeneralSetFailure = 351;
+var _GeneralCommitFailure = 391;
+var _UndefinedDataModelElement = 401;
+var _UnimplementedDataModelElement = 402;
+var _DataModelElementValueNotInitialized = 403;
+var _DataModelElementIsReadOnly = 404;
+var _DataModelElementIsWriteOnly = 405;
+var _DataModelElementTypeMismatch = 406;
+var _DataModelElementValueOutOfRange = 407;
+var apiHandle = null;
+var API = null;
+var findAPITries = 0;
+function doInitialize()
+{
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nInitialize was not successful.");
+      return "false";
+   }
+
+   var result = api.Initialize("");
+
+   if (result.toString() != "true")
+   {
+      var err = ErrorHandler();
+   }
+   else
+   {
+      console.log('doInitialize');
+   }
+   return result.toString();
+}
+function doTerminate()
+{
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nTerminate was not successful.");
+      return "false";
+   }
+   else
+   {
+      var result = api.Terminate("");
+      if (result.toString() != "true")
+      {
+         var err = ErrorHandler();
+      }
+      else
+      {
+         console.log('doTerminate');
+      }
+   }
+
+   return result.toString();
+}
+function doGetValue(name)
+{
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nGetValue was not successful.");
+      return "";
+   }
+   else
+   {
+      var value = api.GetValue(name);
+      var errCode = api.GetLastError().toString();
+      if (errCode != _NoError)
+      {
+         var errDescription = api.GetErrorString(errCode);
+         alert("GetValue("+name+") failed. \n"+ errDescription);
+         return "";
+      }
+      else
+      {
+         var strValue = value.toString();
+         console.log('doGetValue: ' + name + ' : ' + strValue);
+         return strValue;
+      }
+   }
+}
+function doSetValue(name, value)
+{
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nSetValue was not successful.");
+      return;
+   }
+   else
+   {
+      var result = api.SetValue(name, value);
+      if (result.toString() != "true")
+      {
+         var err = ErrorHandler();
+      }
+      else
+      {
+         console.log('doSetValue: ' + name + " : " + value);
+      }
+   }
+
+   return;
+}
+function doCommit()
+{
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nCommit was not successful.");
+      return "false";
+   }
+   else
+   {
+      var result = api.Commit("");
+      if (result != "true")
+      {
+         var err = ErrorHandler();
+      }
+      else
+      {
+         console.log('doCommit');
+      }
+   }
+
+   return result.toString();
+}
+function doGetLastError()
+{
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nGetLastError was not successful.");
+      return _GeneralError;
+   }
+
+   return api.GetLastError().toString();
+}
+function doGetErrorString(errorCode)
+{
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nGetErrorString was not successful.");
+   }
+
+   return api.GetErrorString(errorCode).toString();
+}
+function doGetDiagnostic(errorCode)
+{
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nGetDiagnostic was not successful.");
+   }
+
+   return api.GetDiagnostic(errorCode).toString();
+}
+function ErrorHandler()
+{
+   if (_SuppressError == true)
+      return;
+   var api = getAPIHandle();
+   if (api == null)
+   {
+      alert("Unable to locate the LMS's API Implementation.\nCannot determine LMS error code.");
+      return;
+   }
+   var errCode = api.GetLastError().toString();
+   if (errCode != _NoError)
+   {
+      var errDescription = api.GetErrorString(errCode);
+
+      if (_Debug == true)
+      {
+         errDescription += "\n";
+         errDescription += api.GetDiagnostic(null);
+      }
+
+      console.log(errDescription);
+   }
+
+   return errCode;
+}
+function getAPIHandle()
+{
+   if (apiHandle == null)
+   {
+      apiHandle = getAPI();
+   }
+
+   return apiHandle;
+}
+function findAPI(win)
+{
+   while ((win.API_1484_11 == null) && (win.parent != null) && (win.parent != win))
+   {
+      findAPITries++;
+      if (findAPITries > 500)
+      {
+         alert("Error finding API -- too deeply nested.");
+         return null;
+      }
+      win = win.parent;
+
+   }
+   return win.API_1484_11;
+}
+function getAPI()
+{
+   var w = window;
+   var theAPI = findAPI(w);
+   while ((theAPI == null) && (w.opener != null) && (typeof(w.opener) != "undefined"))
+   {
+	  w = w.opener;
+      theAPI = findAPI(w);
+   }
+   if (theAPI == null)
+   {
+      alert("Unable to find an API adapter");
+   }
+   return theAPI
+}
+function finishVideo(){
+   
+}
