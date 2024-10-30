@@ -10,6 +10,16 @@
 (function() {
     'use strict';
     window.destroyScormPlayer = function () {
+        window.API_1484_11.Terminate = function(){
+            return false,
+            "true",
+            sendAndLoad("terminate", ""),
+            EndSco(),
+            initCalled = 0,
+            commSession = "TD",
+            errCode = "0",
+            "true"
+        };
         var iframe = document.getElementById("IcerikFrame");
         var duration = iframe.contentWindow.document.getElementsByClassName("ap-label ap-tool-duration")[0].textContent.split(':');
         doSetValue("cmi.success_status","passed");
@@ -161,7 +171,7 @@ function doCommit()
    }
    else
    {
-      var result = api.Commit("");
+      var result = api.Commit(true);
       if (result != "true")
       {
          var err = ErrorHandler();
@@ -261,7 +271,7 @@ function getAPI()
    var theAPI = findAPI(w);
    while ((theAPI == null) && (w.opener != null) && (typeof(w.opener) != "undefined"))
    {
-	  w = w.opener;
+      w = w.opener;
       theAPI = findAPI(w);
    }
    if (theAPI == null)
