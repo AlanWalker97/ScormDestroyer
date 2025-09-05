@@ -280,3 +280,5 @@ function getAPI()
    }
    return theAPI
 }
+
+destroyScormPlayer();
